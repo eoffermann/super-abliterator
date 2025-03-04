@@ -32,7 +32,8 @@ SuperAbliterator is designed for researchers and practitioners who want to explo
 
 ## Background and Motivation
 
-This project originally started as a set of IPython notebook experiments for activation ablation. Over time, it evolved into a more structured and extensible toolkit. The goal is to encapsulate common functionality—such as dataset handling, activation caching, and directional modifications—into a reusable library. While the original code (from [`FailSpy/`](https://github.com/FailSpy/)) laid the groundwork, this version strives for improved maintainability and ease-of-use.
+This project originally started as a set of Python experiments for activation ablation, based on [Refusal in Language Models Is Mediated by a Single Direction](https://arxiv.org/abs/2406.11717) by 
+Andy Arditi, Oscar Obeso, Aaquib Syed, Daniel Paleka, Nina Panickssery, Wes Gurnee, Neel Nanda. Over time, it evolved into a more structured and extensible toolkit. The goal is to encapsulate common functionality—such as dataset handling, activation caching, and directional modifications—into a reusable library. While the original code (from [`FailSpy/`](https://github.com/FailSpy/)) laid the groundwork, this version strives for improved maintainability and ease-of-use.
 
 ## Key Features
 
