@@ -253,7 +253,7 @@ class ModelAbliterator:
 
     def get_layer_dirs(self, layer, key: str = None, include_overall_mean: bool=False) -> Dict[str, Float[Tensor, 'd_model']]:
         act_key = key or self.activation_layers[0]
-        if len(self.harmfuls[key]) < layer:
+        if len(self.harmful[key]) < layer:
             raise IndexError("Invalid layer")
         return self.calculate_mean_dirs(utils.get_act_name(act_key, layer), include_overall_mean=include_overall_mean)
 
