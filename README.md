@@ -1,122 +1,168 @@
-# abliterator.py
-Simple Python library/structure to ablate features in LLMs which are supported by TransformerLens.
+# Abliterator
 
-Most of its advantage in workflow comes from being able to enter temporary contexts, quickly cache activations with N samples, refusal direction calculation built-in, and tokenizer utilities. As well as wrapping around certain quirks of TransformerLens.
+Abliterator is a Python toolkit for performing activation ablation experiments on large language models. It provides utilities to cache activations, calculate and apply “refusal directions” (i.e. modifications intended to alter undesirable model behaviors), and easily test the effects of these modifications. The project is based on the GitHub project [`FailSpy/abliterator`](https://github.com/FailSpy/abliterator) and aims to make the workflow more maintainable, easier to expand, and more user-friendly.
 
-If you're interested in notebooking your own orthgonalized model, this library will help save you a LOT of time in performing and measuring experiments to find your best orthogonalization.
+> **Note:** A Gradio GUI is under development. Documentation for the graphical interface will be coming soon.
 
-This is ultimately just bits and pieces to make it so to process and experiment with ablation direction turns into shorter, hopefully clearer code without losing track of where things are at; encapsulating a lot of useful logic that you'll find yourself writing if you're looking to do this more.
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Background and Motivation](#background-and-motivation)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Command-Line Utility: abliterate.py](#command-line-utility-abliteratepy)
+  - [Global Options](#global-options)
+  - [Subcommands and Usage Examples](#subcommands-and-usage-examples)
+    - [Cache Activations](#cache-activations)
+    - [Generate Text](#generate-text)
+    - [Test Model Behavior](#test-model-behavior)
+    - [Find and Apply Refusal Directions](#find-and-apply-refusal-directions)
+- [Example Python Usage](#example-python-usage)
+- [Future Directions](#future-directions)
 
-This library is so exceedingly barebones for right now, and documentation is slim at the moment (WYSIWYG!). Right now, it feels like a glorified IPython notebook rather than something more broadly useful.
-I want to publish this now to lay out the template, and hopefully bring this up to snuff over time. Ideally with the help of the community!
+---
 
-Right now, this works very well for my own personal workflow, but I would like to systematize and ideally automate this further, and broaden out from the pure "harmless / harmful" feature ablation, to augmentation, and adding additional features
+## Project Overview
 
-## Loading a model in
+Abliterator is designed for researchers and practitioners who want to explore and manipulate the internals of transformer-based language models. By caching activations and computing directional modifications, users can test how changes in specific activation components affect overall model behavior.
+
+## Background and Motivation
+
+This project originally started as a set of IPython notebook experiments for activation ablation. Over time, it evolved into a more structured and extensible toolkit. The goal is to encapsulate common functionality—such as dataset handling, activation caching, and directional modifications—into a reusable library. While the original code (from [`FailSpy/abliterator`](https://github.com/FailSpy/abliterator)) laid the groundwork, this version strives for improved maintainability and ease-of-use.
+
+## Key Features
+
+- **Activation Caching:** Quickly cache model activations using samples from both harmful and harmless datasets.
+- **Refusal Direction Computation:** Calculate and apply modifications (refusal directions) to alter model behavior.
+- **Dataset Integration:** Seamlessly load harmful and harmless instruction datasets from Hugging Face, with support for custom JSON files containing additional instructions.
+- **Flexible Command-Line Interface:** Execute core tasks (caching, testing, text generation, and modification) directly from the command line.
+- **Context Management:** Safely experiment with modifications using Python context management to temporarily apply changes.
+
+## Installation
+
+Clone the repository and install the required dependencies:
+```bash
+git clone https://github.com/eoffermann/super-abliterator.git
+cd super-abliterator
+pip install -r requirements.txt
+```
+
+## Command-Line Utility: abliterate.py
+
+The `abliterate.py` script provides a command-line interface (CLI) for all key operations of the toolkit. It not only wraps the core library functionality but also allows you to point the functions `get_harmful_instructions` and `get_harmless_instructions` to custom Hugging Face datasets, and to pass additional instructions via JSON files.
+
+### Global Options
+
+When running the script, you must provide several global arguments:
+- `--model`: The model path or Hugging Face model identifier (e.g., `meta-llama/Meta-Llama-3-70B-Instruct`).
+- `--device`: Device to use (default is `cuda`).
+- `--cache-fname`: Filename for saving or loading cached activations.
+- `--activation-layers`: List of activation layers to monitor (default: `resid_pre resid_post mlp_out attn_out`).
+- `--positive-toks`: List of token IDs that are considered positive (default: `23371 40914`).
+- `--negative-toks`: List of token IDs that are considered negative (default: `4250`).
+
+### Subcommands and Usage Examples
+
+The CLI supports several subcommands. Below are the most common ones:
+
+#### Cache Activations
+
+Caches model activations on both harmful and harmless instruction samples.
+
+```bash
+python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
+  cache --N 512 --batch-size 8 --preserve-harmless \
+  --harmful-hf-path Undi95/orthogonal-activation-steering-TOXIC \
+  --harmless-hf-path tatsu-lab/alpaca \
+  --harmful-json path/to/harmful_instructions.json \
+  --harmless-json path/to/harmless_instructions.json
+```
+
+- **Explanation:**
+  - `--N`: Number of samples to cache.
+  - `--preserve-harmless`: Keep the existing harmless cache if already set.
+  - `--harmful-json`/`--harmless-json`: Custom JSON files with additional instructions to be merged with the respective Hugging Face datasets.
+  - If a `--cache-fname` is provided, the cached activations are saved to the specified file.
+
+#### Generate Text
+
+Generate text responses from the model using a given prompt.
+
+```bash
+python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
+  generate --prompt "What is the capital of France?" --max-tokens 64
+```
+
+#### Test Model Behavior
+
+Test the model on a subset of harmful test instances.
+
+```bash
+python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
+  test --N 16 --batch-size 4
+```
+
+#### Find and Apply Refusal Directions
+
+Find the best refusal direction (i.e., modification that changes model behavior) and optionally apply it.
+
+**Find Best Direction:**
+```bash
+python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
+  find_best_dir --N 4 --use-hooks
+```
+
+**Automatically Find and Apply:**
+```bash
+python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
+  apply --find-best --layers 1 2 3
+```
+
+- **Explanation:**
+  - `find_best_dir`: Computes scores for different refusal directions.
+  - `apply --find-best`: Automatically finds the best direction and applies it. The `--layers` option allows you to specify which layers should be modified.
+
+## Example Python Usage
+
+Below is an example snippet demonstrating how to use the library within Python code:
+
 ```python
 import abliterator
 
-model = "meta-llama/Meta-Llama-3-70B-Instruct"  # the huggingface or path to the model you're interested in loading in
-dataset = [abliterator.get_harmful_instructions(), abliterator.get_harmless_instructions()] # datasets to be used for caching and testing, split by harmful/harmless
-device = 'cuda'                             # optional: defaults to cuda
-n_devices = None                            # optional: when set to None, defaults to `device.cuda.device_count`
-cache_fname = 'my_cached_point.pth'         # optional: if you need to save where you left off, you can use `save_activations(filename)` which will write out a file. This is how you load that back in.
-activation_layers = None                    # optional: defaults to ['resid_pre', 'resid_mid', 'resid_post'] which are the residual streams. Setting to None will cache ALL activation layer types
-chat_template = None                        # optional: defaults to Llama-3 instruction template. You can use a format string e.g. ("<system>{instruction}<end><assistant>") or a custom class with format function -- it just needs an '.format(instruction="")` function. See abliterator.ChatTemplate for a very basic structure.
-negative_toks = [4250]                      # optional, but highly recommended: ' cannot' in Llama's tokenizer. Tokens you don't want to be seeing. Defaults to my preset for Llama-3 models
-positive_toks = [23371, 40914]              # optional, but highly recommended: ' Sure' and 'Sure' in Llama's tokenizer. Tokens you want to be seeing, basically. Defaults to my preset for Llama-3 models
+model = "meta-llama/Meta-Llama-3-70B-Instruct"
+# Load harmful and harmless instruction datasets.
+dataset = [
+    abliterator.get_harmful_instructions(),
+    abliterator.get_harmless_instructions()
+]
+device = 'cuda'
+cache_fname = 'my_cached_point.pth'
 
+# Instantiate the ModelAbliterator.
 my_model = abliterator.ModelAbliterator(
-  model,
-  dataset,
-  device='cuda',
-  n_devices=None,
-  cache_fname=None,
-  activation_layers=['resid_pre', 'resid_post', 'attn_out', 'mlp_out'],
-  chat_template="<system>\n{instruction}<end><assistant>",
-  positive_toks=positive_toks,
-  negative_toks=negative_toks
+    model,
+    dataset,
+    device=device,
+    cache_fname=cache_fname,
+    activation_layers=['resid_pre', 'resid_post', 'attn_out', 'mlp_out'],
+    chat_template="<system>\n{instruction}<end><assistant>",
+    positive_toks=[23371, 40914],
+    negative_toks=[4250]
 )
+
+# Cache activations on 512 samples.
+my_model.cache_activations(N=512, batch_size=8, preserve_harmless=True)
+
+# Generate text using the model.
+output = my_model.generate("How much wood could a woodchuck chuck if a woodchuck could chuck wood?")
+print("\n".join(output))
 ```
 
-## Cache activations/sample dataset
-Once loaded in, run the model against N samples of harmful, and N samples of harmless so it has some data to work with:
-```python
-my_model.cache_activations(N=512,reset=True,preserve_harmless=True)
-```
-`preserve_harmless=True` is generally useful, as it keeps the "desired behaviour" unaltered from any stacked modifications if you run it after some mods.
+## Future Directions
 
-## Saving state
-Most of the advantage of this is a lot of groundwork has been laid to make it so you aren't repeating yourself 1000 times just to try one little experiment.
-`save_activations('file.pth')` will save your cached activations, and any currently applied modifications to the model's weights to a file so you can restore them next time you load up with `cache_fname='file.pth'` in your ModelAbliterator initialization.
+- **Gradio GUI:** A graphical interface is in progress to allow users to interact with the toolkit via a web application.
+- **Extended Datasets:** Future versions may include support for additional datasets and more nuanced instruction handling.
+- **Enhanced Modifications:** The project will continue to improve the methods for calculating and applying refusal directions, making the process more robust.
 
-## Getting refusal directions from the cached activations
-Speaking of modding, here's a simple representation of how to pick, test, and actually apply a direction from a layer's activations:
-```python
-refusal_dirs = my_model.refusal_dirs()
-testing_dir = refusal_dirs['blocks.18.hook_resid_pre']
-my_model.test_dir(testing_dir, N=32, use_hooks=True) # I recommend use_hooks=True for large models as it can slow things down otherwise, but use_hooks=False can give you more precise scoring to an actual weights modification
-```
-`test_dir` will apply your refusal_dir to the model temporarily, and run against N samples of test data, and return a composite (negative_score, positive_score) from those runs. Generally, you want negative_score to go down, positive_score to go up.
+---
 
-### Testing lots of refusal directions
-
-This is one of the functions included in the library, but it's also useful for showing how this can be generalized to test a whole bunch of directions.
-```python
-    def find_best_refusal_dir(N=4, use_hooks=True, invert=False):
-        dirs = self.refusal_dirs(invert=invert)
-        scores = []
-        for direction in tqdm(dirs.items()):
-            score = self.test_dir(direction[1],N=N,use_hooks=use_hooks)[0]
-            scores.append((score,direction))
-        return sorted(scores,key=lambda x:x[0])
-
-```
-
-## Applying the weights
-
-And now, to apply it!
-```python
-my_amazing_dir = find_best_refusal_dir()[0]
-my_model.apply_refusal_dirs([my_amazing_dir],layers=None)
-```
-Note the `layers=None`. You can supply a list here to specify which layers you want to apply the refusal direction to. None will apply it to all writable layers.
-
-### Blacklisting specific layers
-Sometimes some layers are troublesome no matter what you do. If you're worried about accidentally replacing it, you can blacklist it to prevent any alteration from occurring:
-```python
-my_model.blacklist_layer(27)
-my_model.blacklist_layer([i for i in range(27,30)]) # it also accepts lists!
-```
-
-#### Whitelisting
-And naturally, to undo this and make sure a layer can be overwritten:
-```
-my_model.whitelist_layer(27)
-```
-By default, all layers are whitelisted. I recommend blacklisting the first and last couple layers, as those can and will have dramatic effects on outputs.
-
-Neither of these will provide success/failure states. They will just assure the desired state in running it at that instant.
-
-## Benchmarking
-Now to make sure you've not damaged the model dramatically after applying some stuff, you can do a test run:
-```python
-with my_model: # loads a temporary context with the model
-  ortho.apply_refusal_dir([my_new_precious_dir]) # Because this was applied in the 'with my_model:', it will be unapplied after coming out.
-  print(my_model.mse_harmless(N=128)) # While we've got the dir applied, this tells you the Mean Squared Error using the current cached harmless runs as "ground truth" (loss function, effectively)
-```
-
-### Want to see it run? Test it!
-```python
-ortho.test(N=16,batch_size = 4) # runs N samples from the harmful test set and prints them for the user. Good way to check the model hasn't completely derailed.
-# Note that by default if a test run produces a negative token, it will stop the whole batch and move on to the next. (it will show lots of '!!!!' in Llama-3's case, as that's token ID 0)
-
-ortho.generate("How much wood could a woodchuck chuck if a woodchuck could chuck wood?") # runs and prints the prompt!
-```
-
-## Utility functions
-Documentation coming soon.
-
-## How to Save as a HuggingFace model
-Functionality coming soon. For now, use PyTorch's saving method, or see my notebook for an idea of how to do this yourself.
-
+Feel free to open an issue or submit a pull request if you have suggestions or need further assistance!
