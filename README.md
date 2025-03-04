@@ -27,7 +27,7 @@ Abliterator is designed for researchers and practitioners who want to explore an
 
 ## Background and Motivation
 
-This project originally started as a set of IPython notebook experiments for activation ablation. Over time, it evolved into a more structured and extensible toolkit. The goal is to encapsulate common functionality—such as dataset handling, activation caching, and directional modifications—into a reusable library. While the original code (from [`FailSpy/abliterator`](https://github.com/FailSpy/abliterator)) laid the groundwork, this version strives for improved maintainability and ease-of-use.
+This project originally started as a set of IPython notebook experiments for activation ablation. Over time, it evolved into a more structured and extensible toolkit. The goal is to encapsulate common functionality—such as dataset handling, activation caching, and directional modifications—into a reusable library. While the original code (from [`FailSpy/`](https://github.com/FailSpy/)) laid the groundwork, this version strives for improved maintainability and ease-of-use.
 
 ## Key Features
 
@@ -41,8 +41,8 @@ This project originally started as a set of IPython notebook experiments for act
 
 Clone the repository and install the required dependencies:
 ```bash
-git clone https://github.com/eoffermann/super-abliterator.git
-cd super-abliterator
+git clone https://github.com/eoffermann/super-.git
+cd super-
 pip install -r requirements.txt
 ```
 
@@ -126,19 +126,19 @@ python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
 Below is an example snippet demonstrating how to use the library within Python code:
 
 ```python
-import abliterator
+import Abliterator
 
 model = "meta-llama/Meta-Llama-3-70B-Instruct"
 # Load harmful and harmless instruction datasets.
 dataset = [
-    abliterator.get_harmful_instructions(),
-    abliterator.get_harmless_instructions()
+    Abliterator.get_harmful_instructions(),
+    Abliterator.get_harmless_instructions()
 ]
 device = 'cuda'
 cache_fname = 'my_cached_point.pth'
 
 # Instantiate the ModelAbliterator.
-my_model = abliterator.ModelAbliterator(
+my_model = Abliterator.ModelAbliterator(
     model,
     dataset,
     device=device,
