@@ -19,6 +19,10 @@ SuperAbliterator is a Python toolkit for performing activation ablation experime
 - [Gradio Interface (Beta)](#gradio-interface-beta)
 - [Example Python Usage](#example-python-usage)
 - [Future Directions](#future-directions)
+  - [Fine-Grained Behavior Control and Extended Alignment](#fine-grained-behavior-control-and-extended-alignment)
+  - [Enhanced Model Explainability and Debugging](#enhanced-model-explainability-and-debugging)
+  - [Increasing Alignment Capabilities by Adding More Topics for Refusal](#increasing-alignment-capabilities-by-adding-more-topics-for-refusal)
+  - [New Research Applications](#new-research-applications)
 
 ---
 
