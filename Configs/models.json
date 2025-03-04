@@ -1,0 +1,10 @@
+[
+    {
+        "id": "meta-llama/Meta-Llama-3-70B-Instruct",
+        "size": "70B"
+    },
+    {
+        "id": "gpt2",
+        "size": "117M"
+    }
+]
