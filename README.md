@@ -1,6 +1,6 @@
-# SuperAbliterator
+# Abliterator
 
-SuperAbliterator is a Python toolkit for performing activation ablation experiments on large language models. It provides utilities to cache activations, calculate and apply “refusal directions” (i.e. modifications intended to alter undesirable model behaviors), and easily test the effects of these modifications. The project is based on the GitHub project [`FailSpy/abliterator`](https://github.com/FailSpy/abliterator) and aims to make the workflow more maintainable, easier to expand, and more user-friendly.
+Abliterator is a Python toolkit for performing activation ablation experiments on large language models. It provides utilities to cache activations, calculate and apply “refusal directions” (i.e. modifications intended to alter undesirable model behaviors), and easily test the effects of these modifications. The project is based on the GitHub project [`FailSpy/abliterator`](https://github.com/FailSpy/abliterator) and aims to make the workflow more maintainable, easier to expand, and more user-friendly.
 
 > **Note:** A Gradio GUI is under development. Documentation for the graphical interface will be coming soon.
 
@@ -16,6 +16,7 @@ SuperAbliterator is a Python toolkit for performing activation ablation experime
     - [Generate Text](#generate-text)
     - [Test Model Behavior](#test-model-behavior)
     - [Find and Apply Refusal Directions](#find-and-apply-refusal-directions)
+- [Gradio Interface (Beta)](#gradio-interface-beta)
 - [Example Python Usage](#example-python-usage)
 - [Future Directions](#future-directions)
 
@@ -23,7 +24,7 @@ SuperAbliterator is a Python toolkit for performing activation ablation experime
 
 ## Project Overview
 
-SuperAbliterator is designed for researchers and practitioners who want to explore and manipulate the internals of transformer-based language models. By caching activations and computing directional modifications, users can test how changes in specific activation components affect overall model behavior.
+Abliterator is designed for researchers and practitioners who want to explore and manipulate the internals of transformer-based language models. By caching activations and computing directional modifications, users can test how changes in specific activation components affect overall model behavior.
 
 ## Background and Motivation
 
@@ -41,8 +42,8 @@ This project originally started as a set of IPython notebook experiments for act
 
 Clone the repository and install the required dependencies:
 ```bash
-git clone https://github.com/eoffermann/super-.git
-cd super-
+git clone https://github.com/eoffermann/super-abliterator.git
+cd super-abliterator
 pip install -r requirements.txt
 ```
 
@@ -121,6 +122,48 @@ python abliterate.py --model meta-llama/Meta-Llama-3-70B-Instruct \
   - `find_best_dir`: Computes scores for different refusal directions.
   - `apply --find-best`: Automatically finds the best direction and applies it. The `--layers` option allows you to specify which layers should be modified.
 
+## Gradio Interface (Beta)
+
+**Status:** The Gradio interface is currently under development and is not fully functional yet. However, the planned feature set and UI organization are outlined below.
+
+### Planned Feature Set
+
+- **Custom Instruction Lists Editor:**
+  - Edit and create harmful/harmless instruction lists.
+  - Upload and download JSON files for easy sharing and persistence.
+- **Activation Layers Selection:**
+  - Checkboxes for selecting base activation layer types (e.g., `resid_pre`, `resid_post`, `mlp_out`, `attn_out`).
+  - *TODO:* More granular per-layer selection options will be added in future updates.
+- **Generate Text with Abliteration Comparison:**
+  - Input prompt for text generation.
+  - Side-by-side display of original model output and output after applying abliteration modifications.
+- **Batch Analysis Panel:**
+  - Run batch experiments on a harmful dataset.
+  - Display both generated outputs and analysis metrics (such as positive/negative scores).
+- **Abliteration Process & Export Panel:**
+  - Model selection via default configurations or by searching Hugging Face directly.
+  - Device selection (CPU or CUDA) and cache file loading (with a dropdown populated from the `Caches` directory).
+  - Run the ablation process, logging progress, and applying the best refusal direction.
+  - Export the modified (SUPERA) model state and simulate quant generation for various configurations (e.g., `Q8_0`, `Q6_K`, etc.).
+
+### UI Organization
+
+The planned Gradio interface will be organized into tabbed panels:
+
+1. **Custom Instruction Lists:**  
+   - Two editors (one for harmful and one for harmless instructions) with upload/download functionality.
+2. **Activation Layers:**  
+   - A checkbox group for selecting base activation layer types.
+3. **Generate Text:**  
+   - Prompt input with a "Generate" button that displays outputs side-by-side for comparison.
+4. **Batch Analysis:**  
+   - Batch run on harmful prompts with outputs and additional analysis metrics.
+5. **Abliteration Process & Export:**  
+   - Model selection, device settings, cache file dropdown, and ablation process with progress logging.
+   - An export panel for saving the modified model and simulating quant generation.
+
+---
+
 ## Example Python Usage
 
 Below is an example snippet demonstrating how to use the library within Python code:
@@ -159,10 +202,6 @@ print("\n".join(output))
 
 ## Future Directions
 
-- **Gradio GUI:** A graphical interface is in progress to allow users to interact with the toolkit via a web application.
+- **Gradio GUI:** The graphical interface is currently in development. Future updates will add a fully functional Gradio-based UI as outlined above.
 - **Extended Datasets:** Future versions may include support for additional datasets and more nuanced instruction handling.
 - **Enhanced Modifications:** The project will continue to improve the methods for calculating and applying refusal directions, making the process more robust.
-
----
-
-Feel free to open an issue or submit a pull request if you have suggestions or need further assistance!
